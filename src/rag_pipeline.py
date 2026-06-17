@@ -168,6 +168,11 @@ Câu hỏi viết lại:"""
         # 2. RAG context cho kiến thức lịch sử / background
         contexts, topic = self.retrieve_context(rewritten_query)
         context_str = "\n".join([f"- {c}" for c in contexts]) if contexts else ""
+        
+        # NẾU câu hỏi là về lịch/kết quả (intent) MÀ API bị chặn, TẮT RAG để tránh bot lấy data cũ từ file CSV ra trả lời bừa
+        if intent and not api_success and "[API Football]" in api_data:
+            context_str = "RAG context đã bị tắt cho câu hỏi này để đảm bảo tính thời sự."
+
         history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in history])
         current_date = datetime.datetime.now().strftime("%d/%m/%Y")
 
