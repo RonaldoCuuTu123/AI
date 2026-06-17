@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football AI RAG Assistant</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Thư viện Marked.js để render Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="background-overlay"></div>
+    <div class="app-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fa-solid fa-futbol logo-icon"></i>
+                <h2>Football AI</h2>
+            </div>
+            <div class="sidebar-content">
+                <div class="trending-section">
+                    <h3><i class="fa-solid fa-fire"></i> Gợi ý nhanh</h3>
+                    <ul class="quick-suggestions">
+                        <li onclick="sendSuggestion('Ai vô địch Euro 2024?')">🏆 Đội vô địch Euro 2024?</li>
+                        <li onclick="sendSuggestion('Vua phá lưới Ngoại hạng Anh mùa vừa rồi là ai?')">⚽ Vua phá lưới NHA?</li>
+                        <li onclick="sendSuggestion('Mbappe đã chuyển đến đội nào?')">💸 Tin chuyển nhượng mới</li>
+                        <li onclick="sendSuggestion('Real Madrid vô địch C1 năm 2024 như thế nào?')">⭐ Real Madrid vô địch C1</li>
+                    </ul>
+                </div>
+                <button id="clear-chat-btn" class="action-btn"><i class="fa-solid fa-trash"></i> Xóa lịch sử trò chuyện</button>
+            </div>
+            <div class="sidebar-footer">
+                <p>Powered by Hybrid RAG</p>
+                <div class="status-indicator">
+                    <span class="dot"></span> Online
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <div class="chat-container">
+            <header class="chat-header">
+                <div class="header-info">
+                    <div>
+                        <h1>Trợ lý Bóng đá AI 2024</h1>
+                        <p class="subtitle">Cập nhật tin tức, kết quả, chuyển nhượng nhanh nhất</p>
+                    </div>
+                </div>
+            </header>
+
+            <main class="chat-box" id="chat-box">
+                <div class="message bot-message">
+                    <div class="avatar"><i class="fa-solid fa-robot"></i></div>
+                    <div class="message-content">
+                        Xin chào! Tôi là Trợ lý Bóng đá AI phiên bản 2024. Hãy chọn một chủ đề bên trái hoặc hỏi tôi bất cứ thông tin nào về Euro, Copa America, Ngoại hạng Anh hay tình hình chuyển nhượng!
+                    </div>
+                </div>
+            </main>
+
+            <div class="typing-indicator hidden" id="typing-indicator">
+                <span></span><span></span><span></span>
+            </div>
+
+            <footer class="chat-input-area">
+                <div class="input-wrapper">
+                    <input type="text" id="user-input" placeholder="Bạn muốn hỏi gì về bóng đá hôm nay?..." autocomplete="off">
+                    <button id="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
