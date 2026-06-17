@@ -9,6 +9,10 @@ def generate_sample_data():
     
     data = [
         # --- KẾT QUẢ & CÁC GIẢI ĐẤU LỚN ---
+        {"Question": "Ai vô địch Ngoại hạng Anh mùa giải 2025-2026?", "Context_Answer": "**Arsenal** đã xuất sắc lên ngôi vô địch Ngoại hạng Anh mùa giải 2025-2026, chấm dứt cơn khát danh hiệu kéo dài 22 năm của câu lạc bộ.", "Topic": "Standings"},
+        {"Question": "Đội nào vô địch Premier League mùa giải 2024-2025?", "Context_Answer": "**Liverpool** dưới thời HLV Arne Slot đã vô địch Ngoại hạng Anh mùa giải 2024/25.", "Topic": "Standings"},
+        {"Question": "Ai vô địch C1 năm 2026?", "Context_Answer": "**Paris Saint-Germain (PSG)** đã vô địch Champions League 2026 sau khi đánh bại Arsenal trên chấm luân lưu với tỷ số 4-3 (hòa 1-1 sau 120 phút). Đây là chức vô địch C1 liên tiếp thứ 2 của họ.", "Topic": "Result"},
+        {"Question": "Nhà vô địch Champions League 2025 là đội nào?", "Context_Answer": "**PSG** đã đè bẹp Inter Milan với tỷ số 5-0 trong trận chung kết Champions League 2025 tại Allianz Arena để lên ngôi vô địch.", "Topic": "Result"},
         {"Question": "Ai vô địch Euro 2024?", "Context_Answer": "**Tây Ban Nha** đã giành chức vô địch Euro 2024 sau khi đánh bại Anh với tỷ số 2-1 trong trận chung kết. Mikel Oyarzabal là người ghi bàn quyết định.", "Topic": "Result"},
         {"Question": "Tỷ số trận chung kết Euro 2024?", "Context_Answer": "Trận chung kết Euro 2024 kết thúc với tỷ số **2-1** nghiêng về Tây Ban Nha trước đội tuyển Anh. Các bàn thắng của Tây Ban Nha được ghi do công của Nico Williams và Mikel Oyarzabal.", "Topic": "Result"},
         {"Question": "Đội nào vô địch Copa America 2024?", "Context_Answer": "**Argentina** đã bảo vệ thành công ngôi vương Copa America 2024 sau khi thắng Colombia 1-0 nhờ bàn thắng ở hiệp phụ của Lautaro Martinez.", "Topic": "Result"},

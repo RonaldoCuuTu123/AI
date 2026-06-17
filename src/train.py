@@ -8,10 +8,10 @@ from preprocess import preprocess_text
 
 def train_models():
     # 1. Load Data
-    data_path = 'data/qa_train.csv'
+    data_path = 'data/qa_train_augmented.csv'
     # Adjust path if script is run from src directory
     if not os.path.exists(data_path):
-        data_path = '../data/qa_train.csv'
+        data_path = '../data/qa_train_augmented.csv'
     if not os.path.exists(data_path):
         print(f"File {data_path} không tồn tại. Vui lòng chạy generate_data.py trước.")
         return
