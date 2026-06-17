@@ -42,38 +42,61 @@ Hệ thống sử dụng các thuật toán truyền thống để phân tích c
 
 ## Hướng dẫn Cài đặt
 
-1. **Cài đặt môi trường:**
-   Tạo virtual environment và cài đặt các thư viện:
+1. **Clone dự án & Cài đặt môi trường:**
+   Tạo virtual environment và cài đặt các thư viện cần thiết:
    ```bash
+   git clone <link-repo-cua-ban>
+   cd football_ai_rag_project
+   python -m venv .venv
+   .\.venv\Scripts\activate      # Dành cho Windows
+   # source .venv/bin/activate    # Dành cho Mac/Linux
    pip install -r requirements.txt
    ```
 
-2. **Cấu hình API Key:**
-   Mở file `.env` và điền API key của bạn:
+2. **Đăng ký và lấy API Keys (Quan trọng):**
+   Dự án này cần 2 API key để hoạt động đầy đủ tính năng:
+   
+   * **Gemini API Key (Miễn phí):**
+     - Truy cập trang [Google AI Studio](https://aistudio.google.com/app/apikey).
+     - Đăng nhập bằng tài khoản Google của bạn.
+     - Nhấn nút **"Create API Key"**.
+     - Copy đoạn mã API key vừa tạo.
+   
+   * **API-Football Key (Miễn phí 100 requests/ngày):**
+     - Truy cập trang [API-Sports](https://dashboard.api-football.com/register).
+     - Đăng ký một tài khoản và đăng nhập vào Dashboard.
+     - Ở mục **Account**, bạn sẽ thấy **API Key** của mình. Copy đoạn mã này.
+
+3. **Cấu hình file `.env`:**
+   Tạo một file có tên `.env` ở thư mục gốc của dự án (nằm cùng chỗ với file `app.py`). Sau đó dán 2 API keys vừa copy vào theo định dạng sau:
    ```env
-   GEMINI_API_KEY=your_actual_api_key_here
+   GEMINI_API_KEY=dán_gemini_api_key_cua_ban_vao_day
+   API_FOOTBALL_KEY=dán_api_football_key_cua_ban_vao_day
    ```
 
-3. **Tạo dữ liệu và Huấn luyện mô hình:**
-   Sinh dữ liệu mẫu:
-   ```bash
-   python generate_data.py
-   ```
-   Huấn luyện các mô hình truyền thống (AI Core):
+4. **Huấn luyện mô hình cơ sở (Làm 1 lần duy nhất):**
+   Hệ thống cần huấn luyện các mô hình AI truyền thống (TF-IDF, Naive Bayes, KNN) từ file CSV nội bộ:
    ```bash
    python src/train.py
    ```
 
-4. **Đánh giá Mô hình (Tuỳ chọn nhưng quan trọng cho chấm điểm):**
+5. **Chạy Server:**
+   Khởi động server backend bằng lệnh:
    ```bash
-   python src/evaluate.py
+   python app.py
    ```
-
-5. **Chạy Server Backend:**
-   Khởi động server bằng FastAPI/Uvicorn:
-   ```bash
-   uvicorn app:app --reload
-   ```
+   *(Hoặc chạy thông qua uvicorn nếu bạn muốn: `uvicorn app:app --reload`)*
 
 6. **Sử dụng:**
-   Truy cập `http://127.0.0.1:8000` trên trình duyệt để sử dụng Chatbot.
+   Mở trình duyệt web và truy cập vào địa chỉ: [http://127.0.0.1:8000](http://127.0.0.1:8000). Giao diện chatbot sẽ hiện ra để bạn trải nghiệm.
+
+## Các tính năng nổi bật để test
+
+- **Hỏi lịch thi đấu & kết quả thực tế:** 
+  Hệ thống được thiết kế ưu tiên **API Football** làm nguồn sự thật (Source of Truth). Bạn có thể hỏi *"Lịch World Cup hôm nay?"* hoặc *"Kết quả World Cup hôm qua?"* — hệ thống sẽ gọi API thật và trả về dữ liệu siêu chuẩn xác.
+- **Conversational Memory (Nhớ ngữ cảnh trò chuyện):**
+  Hỏi câu đầu: *"Ai vô địch World Cup 2022?"*
+  Hỏi tiếp (không nhắc lại): *"Họ đã thắng ai ở chung kết?"*
+  Hệ thống sẽ tự hiểu "Họ" là Argentina.
+- **Phân tích & Dự đoán thông minh:**
+  Sức mạnh của Gemini 2.5 Flash cho phép bạn đưa ra các câu hỏi mở như *"Dự đoán đội vô địch Ngoại hạng Anh năm nay"*. Trợ lý sẽ phân tích sâu sắc dựa trên kiến thức hiện có.

@@ -19,6 +19,7 @@ rag_system = RAGPipeline()
 
 class ChatRequest(BaseModel):
     query: str
+    history: list = []
 
 @app.get("/", response_class=HTMLResponse)
 async def read_index(request: Request):
@@ -29,9 +30,9 @@ async def chat_endpoint(request: ChatRequest):
     if not rag_system.is_ready:
         return {"error": "Hệ thống chưa được huấn luyện. Vui lòng chạy train.py trước."}
         
-    result = rag_system.generate_answer(request.query)
+    result = rag_system.generate_answer(request.query, request.history)
     return result
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8888)
