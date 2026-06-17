@@ -128,8 +128,12 @@ Câu hỏi viết lại:"""
         elif intent == 'fixture':
             result = get_fixtures_by_date(date_iso)
             if not result["success"]:
-                # API Football không có dữ liệu cho ngày này (quá cũ hoặc quá xa)
-                return f"[API Football] Không có dữ liệu cho ngày {date_iso}: {result.get('error', 'Unknown error')}", False
+                # API Football chặn vì dùng gói Free
+                error_msg = result.get('error', '')
+                if "Free plans do not have access" in error_msg:
+                    return f"[API Football] Bị chặn do gói Miễn phí (Free plan) không cho phép xem lịch ngày {date_iso}.", False
+                return f"[API Football] Lỗi: {error_msg}", False
+
             wc = result.get("wc_fixtures", [])
             major = result.get("major_fixtures", [])
             date_vn = datetime.datetime.strptime(date_iso, "%Y-%m-%d").strftime("%d/%m/%Y")
@@ -200,7 +204,8 @@ LỊCH SỬ TRÒ CHUYỆN:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 QUY TẮC SỬ DỤNG DỮ LIỆU:
-- Câu hỏi về LỊCH / KẾT QUẢ / LIVE → LUÔN dùng dữ liệu API Football ở trên, KHÔNG bịa thêm.
+- Câu hỏi về LỊCH / KẾT QUẢ / LIVE → LUÔN dùng dữ liệu API Football ở trên. 
+- Nếu API Football báo lỗi hoặc "bị chặn do gói Miễn phí", bạn BẮT BUỘC phải thông báo cho người dùng biết lý do này, TUYỆT ĐỐI KHÔNG ĐƯỢC TỰ BỊA RA LỊCH THI ĐẤU.
 - Câu hỏi về LỊCH SỬ / CẦU THỦ / KIẾN THỨC → Ưu tiên ngữ cảnh nội bộ (data đã train).
 - Nếu cả hai nguồn đều không có → Dùng kiến thức chung, thành thật nếu không chắc chắn.
 
