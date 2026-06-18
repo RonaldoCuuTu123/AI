@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sendMessage();
     };
 
-    function appendMessage(sender, text, isHtml = false) {
+    function appendMessage(sender, text, isHtml = false, confidence = null) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message');
         messageDiv.classList.add(sender === 'user' ? 'user-message' : 'bot-message');
@@ -35,9 +35,17 @@ document.addEventListener('DOMContentLoaded', () => {
             contentHtml = isHtml ? text : marked.parse(text);
         }
 
+        let accuracyHtml = "";
+        if (sender === 'bot' && confidence !== null) {
+            accuracyHtml = `<div class="accuracy-circle" title="Độ tin cậy">${confidence}%</div>`;
+        }
+
         messageDiv.innerHTML = `
             <div class="avatar"><i class="fa-solid ${avatarIcon}"></i></div>
-            <div class="message-content">${contentHtml}</div>
+            <div class="message-content">
+                ${contentHtml}
+                ${accuracyHtml}
+            </div>
         `;
         
         chatBox.appendChild(messageDiv);
@@ -90,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // Append html trực tiếp do marked.parse đã xử lý an toàn mức cơ bản (hoặc có thể dùng DOMPurify nếu cần)
-                appendMessage('bot', htmlResponse, true);
+                appendMessage('bot', htmlResponse, true, data.confidence !== undefined ? data.confidence : null);
                 
                 // Lưu vào lịch sử
                 chatHistory.push({ role: 'model', content: data.answer });

@@ -293,12 +293,34 @@ body {
     background: var(--bot-msg-bg);
     border-top-left-radius: 4px;
     border: 1px solid rgba(229, 0, 0, 0.2);
+    position: relative; /* Thêm để định vị vòng tròn */
 }
 
 .user-message .message-content {
     background: var(--user-msg-bg);
     border-top-right-radius: 4px;
     border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+/* Accuracy Circle */
+.accuracy-circle {
+    position: absolute;
+    bottom: -10px;
+    right: -10px;
+    width: 32px;
+    height: 32px;
+    background: var(--bg-dark);
+    border: 2px solid var(--secondary-accent);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--secondary-accent);
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+    z-index: 10;
+    background: linear-gradient(135deg, #0a0a0a, #222);
 }
 
 .context-info {
