@@ -5,3 +5,5 @@ pyvi
 python-dotenv
 pandas
 jinja2
+torch
+sentence-transformers
