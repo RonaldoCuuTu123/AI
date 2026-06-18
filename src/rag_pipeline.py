@@ -1,16 +1,7 @@
 import pandas as pd
 import pickle
 import os
-import re
-import datetime
-from google import genai
-from google.genai import types
-from dotenv import load_dotenv
 from src.preprocess import preprocess_text
-from src.football_api import get_fixtures_by_date, get_live_fixtures
-
-load_dotenv()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 class RAGPipeline:
     def __init__(self):
@@ -31,11 +22,6 @@ class RAGPipeline:
             print("Chưa tìm thấy mô hình. Vui lòng chạy train.py trước.")
             self.is_ready = False
 
-        if GEMINI_API_KEY and GEMINI_API_KEY != "YOUR_GEMINI_API_KEY_HERE":
-            self.client = genai.Client(api_key=GEMINI_API_KEY)
-        else:
-            self.client = None
-
     def retrieve_context(self, query, top_k=3):
         if not self.is_ready:
             return [], None
@@ -46,169 +32,23 @@ class RAGPipeline:
         contexts = [self.df.iloc[idx]['Context_Answer'] for idx in indices[0]]
         return contexts, predicted_topic
 
-    def rewrite_query(self, query, history):
-        if not history or self.client is None:
-            return query
-        history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in history])
-        prompt = f"""Viết lại câu hỏi mới thành một câu hỏi độc lập đầy đủ ý nghĩa (giải quyết đại từ 'anh ấy', 'họ', 'đội đó').
-Nếu đã rõ ràng, giữ nguyên. Chỉ trả về câu hỏi viết lại.
-
-Lịch sử:
-{history_str}
-
-Câu hỏi mới: {query}
-Câu hỏi viết lại:"""
-        try:
-            response = self.client.models.generate_content(
-                model='gemini-flash-lite-latest', contents=prompt)
-            return response.text.strip() or query
-        except:
-            return query
-
-    def _extract_date_intent(self, query_lower):
-        """
-        Phân tích câu hỏi và trả về (intent, target_date_iso).
-        intent: 'live' | 'fixture' | None
-        """
-        now = datetime.datetime.now()
-
-        # Đang diễn ra
-        if any(kw in query_lower for kw in ['đang đá', 'đang diễn ra', 'live', 'trực tiếp', 'đang thi đấu']):
-            return 'live', None
-
-        # Ngày cụ thể dạng DD/MM hoặc DD/MM/YYYY
-        date_match = re.search(r'(\d{1,2})/(\d{1,2})(?:/(\d{4}))?', query_lower)
-        if date_match:
-            d, m = int(date_match.group(1)), int(date_match.group(2))
-            y = int(date_match.group(3)) if date_match.group(3) else now.year
-            try:
-                target = datetime.datetime(y, m, d)
-                return 'fixture', target.strftime("%Y-%m-%d")
-            except:
-                pass
-
-        # N ngày trước
-        n_match = re.search(r'(\d+)\s*ngày\s*trước', query_lower)
-        if n_match:
-            n = int(n_match.group(1))
-            return 'fixture', (now - datetime.timedelta(days=n)).strftime("%Y-%m-%d")
-
-        # Ngày mai
-        if any(kw in query_lower for kw in ['ngày mai', 'tomorrow']):
-            return 'fixture', (now + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-
-        # Hôm qua
-        if any(kw in query_lower for kw in ['hôm qua', 'yesterday', 'hôm trước']):
-            return 'fixture', (now - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-
-        # Hôm nay / lịch / kết quả / trận đấu
-        if any(kw in query_lower for kw in ['hôm nay', 'today', 'lịch', 'kết quả', 'trận']):
-            return 'fixture', now.strftime("%Y-%m-%d")
-
-        return None, None
-
-    def _get_api_football_data(self, intent, date_iso):
-        """
-        Luôn ưu tiên API Football cho mọi câu hỏi về lịch/kết quả.
-        Trả về chuỗi mô tả dữ liệu thực tế (hoặc thông báo lỗi rõ ràng).
-        """
-        if intent == 'live':
-            result = get_live_fixtures()
-            if not result["success"]:
-                return f"[API Football] Lỗi: {result['error']}", False
-            wc = result.get("wc_live", [])
-            major = result.get("major_live", [])
-            if wc:
-                return "🔴 LIVE World Cup 2026:\n" + "\n".join(wc), True
-            elif major:
-                return "🔴 LIVE (Giải lớn):\n" + "\n".join(major), True
-            else:
-                return "[API Football] Hiện không có trận đấu lớn nào đang diễn ra.", True
-
-        elif intent == 'fixture':
-            result = get_fixtures_by_date(date_iso)
-            if not result["success"]:
-                # API Football chặn vì dùng gói Free
-                error_msg = result.get('error', '')
-                if "Free plans do not have access" in error_msg:
-                    return f"[API Football] Bị chặn do gói Miễn phí (Free plan) không cho phép xem lịch ngày {date_iso}.", False
-                return f"[API Football] Lỗi: {error_msg}", False
-
-            wc = result.get("wc_fixtures", [])
-            major = result.get("major_fixtures", [])
-            date_vn = datetime.datetime.strptime(date_iso, "%Y-%m-%d").strftime("%d/%m/%Y")
-            if wc:
-                return f"🏆 World Cup 2026 ngày {date_vn}:\n" + "\n".join(wc), True
-            elif major:
-                return f"📅 Các giải lớn ngày {date_vn}:\n" + "\n".join(major), True
-            else:
-                return f"[API Football] Ngày {date_vn}: Không tìm thấy trận đấu lớn nào.", True
-
-        return "", False
-
     def generate_answer(self, query, history=None):
-        if self.client is None:
-            return {"answer": "Lỗi: Chưa cấu hình GEMINI_API_KEY.", "retrieved_context": [], "detected_topic": "Error"}
+        if not self.is_ready:
+            return {"answer": "Lỗi: Hệ thống chưa sẵn sàng.", "retrieved_context": [], "detected_topic": "Error"}
 
-        if history is None:
-            history = []
-
-        rewritten_query = self.rewrite_query(query, history)
-        query_lower = rewritten_query.lower()
-
-        # 1. Luôn thử API Football trước cho mọi câu hỏi về lịch/kết quả
-        intent, date_iso = self._extract_date_intent(query_lower)
-        api_data = ""
-        api_success = False
-
-        if intent:
-            api_data, api_success = self._get_api_football_data(intent, date_iso)
-            print(f"[Pipeline] intent='{intent}', date='{date_iso}', api_success={api_success}")
-
-        # 2. RAG context cho kiến thức lịch sử / background
-        contexts, topic = self.retrieve_context(rewritten_query)
-        context_str = "\n".join([f"- {c}" for c in contexts]) if contexts else ""
+        # 1. Truy xuất dữ liệu nội bộ bằng KNN
+        contexts, topic = self.retrieve_context(query)
         
-        history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in history])
-        current_date = datetime.datetime.now().strftime("%d/%m/%Y")
+        # 2. Định dạng câu trả lời thô trực tiếp từ CSV (không dùng LLM)
+        if not contexts:
+            answer = "Hệ thống không tìm thấy dữ liệu nội bộ phù hợp cho câu hỏi này."
+        else:
+            answer = "Dựa trên dữ liệu nội bộ, đây là các kết quả tìm được:\n\n"
+            for i, ctx in enumerate(contexts, 1):
+                answer += f"{i}. {ctx}\n"
 
-        # 3. Xây dựng prompt theo tình huống ưu tiên: Data -> API -> Gemini
-        system_role = "Bạn là AI Agent Bóng đá chuyên nghiệp."
-        
-        prompt = f"""{system_role}
-Hôm nay là: {current_date}
-
-NGỮ CẢNH NỘI BỘ (Ưu tiên 1 - Dữ liệu có sẵn từ hệ thống):
-{context_str if context_str else "Không có dữ liệu nội bộ phù hợp."}
-
-DỮ LIỆU THỰC TẾ TỪ API FOOTBALL (Ưu tiên 2 - Dùng nếu Ngữ cảnh nội bộ không có đáp án):
-{api_data if api_data else "Không có dữ liệu API được gọi cho câu hỏi này."}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-QUY TẮC SỬ DỤNG DỮ LIỆU CHUẨN XÁC:
-1. LUÔN ƯU TIÊN tìm câu trả lời trong NGỮ CẢNH NỘI BỘ trước. Nếu Ngữ cảnh nội bộ có chứa thông tin trả lời trực tiếp cho câu hỏi, HÃY DÙNG NÓ và BỎ QUA API.
-2. Nếu Ngữ cảnh nội bộ KHÔNG có đáp án (hoặc thông tin không liên quan), hãy dùng DỮ LIỆU THỰC TẾ TỪ API FOOTBALL.
-3. ĐỐI VỚI LỊCH/KẾT QUẢ MÀ API BÁO LỖI: Nếu API Football báo "bị chặn do gói Miễn phí" hoặc lỗi, bạn BẮT BUỘC phải trả lời chính xác lỗi này cho người dùng, TUYỆT ĐỐI KHÔNG TỰ DỰ ĐOÁN HAY BỊA RA LỊCH THI ĐẤU.
-4. CHỈ DÙNG KIẾN THỨC CỦA BẠN (Gemini) để trả lời khi cả Ngữ cảnh nội bộ và API đều không có thông tin. Hãy nói rõ bạn đang tự phân tích/dự đoán.
-
-CÂU HỎI CỦA NGƯỜI DÙNG: {query}
-
-Trả lời bằng tiếng Việt, rõ ràng, đẹp mắt với emoji phù hợp."""
-
-        try:
-            response = self.client.models.generate_content(
-                model='gemini-flash-lite-latest',
-                contents=prompt,
-                config=types.GenerateContentConfig(temperature=0.4)
-            )
-            return {
-                "answer": response.text,
-                "retrieved_context": contexts,
-                "detected_topic": topic or "General"
-            }
-        except Exception as e:
-            return {
-                "answer": f"Lỗi Gemini: {str(e)}",
-                "retrieved_context": contexts,
-                "detected_topic": topic or "Error"
-            }
+        return {
+            "answer": answer.strip(),
+            "retrieved_context": contexts,
+            "detected_topic": topic or "General"
+        }

@@ -2,7 +2,6 @@ fastapi
 uvicorn
 scikit-learn
 pyvi
-google-genai
 python-dotenv
 pandas
 jinja2
