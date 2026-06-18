@@ -169,52 +169,29 @@ Câu hỏi viết lại:"""
         contexts, topic = self.retrieve_context(rewritten_query)
         context_str = "\n".join([f"- {c}" for c in contexts]) if contexts else ""
         
-        # NẾU câu hỏi là về lịch/kết quả (intent) MÀ API bị chặn, TẮT RAG để tránh bot lấy data cũ từ file CSV ra trả lời bừa
-        if intent and not api_success and "[API Football]" in api_data:
-            context_str = "RAG context đã bị tắt cho câu hỏi này để đảm bảo tính thời sự."
-
         history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in history])
         current_date = datetime.datetime.now().strftime("%d/%m/%Y")
 
-        # 3. Xây dựng prompt theo tình huống
-        if api_success and api_data and "[API Football] Không có dữ liệu" not in api_data and "Lỗi" not in api_data:
-            # Có dữ liệu thực từ API → Gemini chỉ đóng vai trình bày và phân tích
-            system_role = """Bạn là AI Agent Bóng đá chuyên nghiệp. Nhiệm vụ của bạn là trình bày dữ liệu thực tế 
-một cách đẹp mắt, rõ ràng, và có thể thêm phân tích/bình luận chuyên sâu dựa trên thông tin đã cung cấp.
-KHÔNG được bịa thêm tên đội hay tỷ số nào ngoài dữ liệu API Football đã cung cấp."""
-        elif intent and not api_success:
-            # API Football không có dữ liệu (ngày quá cũ/mới) → Gemini dùng kiến thức lịch sử + RAG, KHÔNG bịa số liệu
-            system_role = """Bạn là AI Agent Bóng đá chuyên nghiệp. API Football không có dữ liệu cho yêu cầu này.
-Hãy trả lời dựa trên kiến thức lịch sử bóng đá và ngữ cảnh nội bộ của bạn.
-Nếu thực sự không có thông tin, hãy thành thật nói rằng không có dữ liệu cho ngày đó và gợi ý câu hỏi khác."""
-        else:
-            # Câu hỏi không liên quan đến lịch/kết quả → Gemini trả lời tự do từ kiến thức + RAG
-            system_role = """Bạn là AI Agent Bóng đá chuyên nghiệp với kiến thức sâu rộng về lịch sử bóng đá,
-cầu thủ, chiến thuật, và các giải đấu. Hãy trả lời câu hỏi một cách chi tiết, chính xác và hấp dẫn."""
-
+        # 3. Xây dựng prompt theo tình huống ưu tiên: Data -> API -> Gemini
+        system_role = "Bạn là AI Agent Bóng đá chuyên nghiệp."
+        
         prompt = f"""{system_role}
+Hôm nay là: {current_date}
 
-Hôm nay: {current_date} (Năm 2026 - World Cup 2026 đang diễn ra)
-
-LỊCH SỬ TRÒ CHUYỆN:
-{history_str}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📚 NGỮ CẢNH NỘI BỘ (Ưu tiên 1 - Data đã được train sẵn):
+NGỮ CẢNH NỘI BỘ (Ưu tiên 1 - Dữ liệu có sẵn từ hệ thống):
 {context_str if context_str else "Không có dữ liệu nội bộ phù hợp."}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚡ DỮ LIỆU THỰC TẾ TỪ API FOOTBALL (Ưu tiên 1 - cho lịch/kết quả):
-{api_data if api_data else "Không có dữ liệu API Football cho câu hỏi này."}
+DỮ LIỆU THỰC TẾ TỪ API FOOTBALL (Ưu tiên 2 - Dùng nếu Ngữ cảnh nội bộ không có đáp án):
+{api_data if api_data else "Không có dữ liệu API được gọi cho câu hỏi này."}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-QUY TẮC SỬ DỤNG DỮ LIỆU:
-- Câu hỏi về LỊCH / KẾT QUẢ / LIVE → LUÔN dùng dữ liệu API Football ở trên. 
-- Nếu API Football báo lỗi hoặc "bị chặn do gói Miễn phí", bạn BẮT BUỘC phải thông báo cho người dùng biết lý do này, TUYỆT ĐỐI KHÔNG ĐƯỢC TỰ BỊA RA LỊCH THI ĐẤU.
-- Câu hỏi về LỊCH SỬ / CẦU THỦ / KIẾN THỨC → Ưu tiên ngữ cảnh nội bộ (data đã train).
-- Nếu cả hai nguồn đều không có → Dùng kiến thức chung, thành thật nếu không chắc chắn.
+QUY TẮC SỬ DỤNG DỮ LIỆU CHUẨN XÁC:
+1. LUÔN ƯU TIÊN tìm câu trả lời trong NGỮ CẢNH NỘI BỘ trước. Nếu Ngữ cảnh nội bộ có chứa thông tin trả lời trực tiếp cho câu hỏi, HÃY DÙNG NÓ và BỎ QUA API.
+2. Nếu Ngữ cảnh nội bộ KHÔNG có đáp án (hoặc thông tin không liên quan), hãy dùng DỮ LIỆU THỰC TẾ TỪ API FOOTBALL.
+3. ĐỐI VỚI LỊCH/KẾT QUẢ MÀ API BÁO LỖI: Nếu API Football báo "bị chặn do gói Miễn phí" hoặc lỗi, bạn BẮT BUỘC phải trả lời chính xác lỗi này cho người dùng, TUYỆT ĐỐI KHÔNG TỰ DỰ ĐOÁN HAY BỊA RA LỊCH THI ĐẤU.
+4. CHỈ DÙNG KIẾN THỨC CỦA BẠN (Gemini) để trả lời khi cả Ngữ cảnh nội bộ và API đều không có thông tin. Hãy nói rõ bạn đang tự phân tích/dự đoán.
 
-CÂU HỎI: {query}
+CÂU HỎI CỦA NGƯỜI DÙNG: {query}
 
 Trả lời bằng tiếng Việt, rõ ràng, đẹp mắt với emoji phù hợp."""
 
