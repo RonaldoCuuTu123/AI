@@ -16,7 +16,7 @@ def train_models():
         print(f"File {data_path} không tồn tại. Vui lòng chạy generate_data.py trước.")
         return
         
-    df = pd.read_csv(data_path)
+    df = pd.read_csv(data_path, on_bad_lines='skip')
     print("Đã tải dữ liệu thành công.")
 
     # 2. Preprocess text

@@ -63,7 +63,7 @@ class RAGPipeline:
             return 'fixture', (now + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
         if any(kw in query_lower for kw in ['hôm qua', 'yesterday', 'hôm trước']):
             return 'fixture', (now - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-        if any(kw in query_lower for kw in ['hôm nay', 'today', 'lịch thi đấu', 'kết quả', 'trận đấu']):
+        if any(kw in query_lower for kw in ['hôm nay', 'nay', 'today', 'lịch thi đấu', 'kết quả', 'trận đấu']):
             return 'fixture', now.strftime("%Y-%m-%d")
         return None, None
 
@@ -105,6 +105,8 @@ class RAGPipeline:
 
         # 1. API Football (Lịch/Kết quả)
         intent, date_iso = self._extract_date_intent(query_lower)
+        api_failed = False
+        api_error_msg = ""
         if intent:
             api_data, api_success = self._get_api_football_data(intent, date_iso)
             if api_success:
@@ -114,6 +116,9 @@ class RAGPipeline:
                     "detected_topic": "Football API",
                     "confidence": 100.0
                 }
+            else:
+                api_failed = True
+                api_error_msg = api_data
 
         # 2. RAG context
         contexts, topic, distances = self.retrieve_context(query)
@@ -123,14 +128,41 @@ class RAGPipeline:
             # Giới hạn trong khoảng 0-100
             dist = distances[0]
             confidence = max(0, min(100, (1 - dist) * 100))
+            confidence = round(confidence, 1)
+            
+            # Chỉ trả về câu trả lời nếu độ tin cậy >= 60%
+            if confidence >= 60.0:
+                return {
+                    "answer": contexts[0],
+                    "retrieved_context": contexts,
+                    "detected_topic": topic or "General",
+                    "confidence": confidence
+                }
+            
+            # Nếu có ý định gọi API nhưng thất bại, và độ tin cậy của RAG fallback thấp (< 60%)
+            if api_failed:
+                return {
+                    "answer": "Xin lỗi, tôi không thể trả lời câu hỏi của bạn do tài khoản API Football miễn phí (Free plan) không có quyền truy cập vào dữ liệu thời gian này.",
+                    "retrieved_context": [],
+                    "detected_topic": "Football API Error",
+                    "confidence": 0.0
+                }
             
             return {
-                "answer": contexts[0],
-                "retrieved_context": contexts,
+                "answer": "Tôi không chắc chắn về thông tin này (độ tin cậy quá thấp).",
+                "retrieved_context": [],
                 "detected_topic": topic or "General",
-                "confidence": round(confidence, 1)
+                "confidence": confidence
             }
         
+        if api_failed:
+            return {
+                "answer": "Xin lỗi, tôi không thể trả lời câu hỏi của bạn do tài khoản API Football miễn phí (Free plan) không có quyền truy cập vào dữ liệu thời gian này.",
+                "retrieved_context": [],
+                "detected_topic": "Football API Error",
+                "confidence": 0.0
+            }
+
         return {
             "answer": "Xin lỗi, tôi không tìm thấy thông tin phù hợp trong hệ thống dữ liệu.",
             "retrieved_context": [],
