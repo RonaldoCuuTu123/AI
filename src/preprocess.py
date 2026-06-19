@@ -11,7 +11,10 @@ SLANG_DICT = {
     r'\bcr7\b': 'Cristiano Ronaldo',
     r'\btbn\b': 'Tây Ban Nha',
     r'\bck\b': 'chung kết',
-    r'\bvđ\b': 'vô địch'
+    r'\bvđ\b': 'vô địch',
+    r'\bhlv\b': 'huấn luyện viên',
+    r'\bm10\b': 'Lionel Messi',
+    r'\bwc\b': 'World Cup',
 }
 
 def normalize_text(text):

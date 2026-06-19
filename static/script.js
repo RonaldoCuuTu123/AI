@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let accuracyHtml = "";
         if (sender === 'bot' && confidence !== null) {
-            accuracyHtml = `<div class="accuracy-circle" title="Độ tin cậy">${confidence}%</div>`;
+            accuracyHtml = `<div class="accuracy-circle" title="Độ tin cậy">${Math.round(confidence)}%</div>`;
         }
 
         messageDiv.innerHTML = `
