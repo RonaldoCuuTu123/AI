@@ -36,6 +36,7 @@ class RAGPipeline:
         X_query = self.vectorizer.transform([processed_query])
         predicted_topic = self.nb_model.predict(X_query)[0]
         distances, indices = self.knn_model.kneighbors(X_query, n_neighbors=top_k)
+        print(f"Distances: {distances}, Indices: {indices}")
         contexts = [self.df.iloc[idx]['Context_Answer'] for idx in indices[0]]
         return contexts, predicted_topic, distances[0]
 
@@ -130,8 +131,8 @@ class RAGPipeline:
             confidence = max(0, min(100, (1 - dist) * 100))
             confidence = round(confidence, 1)
             
-            # Chỉ trả về câu trả lời nếu độ tin cậy >= 60%
-            if confidence >= 60.0:
+            # Chỉ trả về câu trả lời nếu độ tin cậy >= 30%
+            if confidence >= 30.0:
                 return {
                     "answer": contexts[0],
                     "retrieved_context": contexts,

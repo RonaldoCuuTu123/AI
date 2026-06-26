@@ -1,146 +1,28 @@
-ĐẠI HỌC BÁCH KHOA HÀ NỘI 
- 
-BÁO CÁO GIỮA KỲ DỰ ÁN 
- 
-Môn học: Nhập môn Trí tuệ nhân tạo IT3160 
- 
- 
- 
-XÂY DỰNG CHATBOT TRÍ TUỆ NHÂN TẠO  
-TRUY VẤN DỮ LIỆU BÓNG ĐÁ CHÂU ÂU 
- 
- 
- 
- 
-Sinh viên thực hiện: Nhóm 37 
-Phạm Thành Trung – 20235853 
-Lê Tuấn Trung – 20235852 
-Nguyễn Bá Tú – 20235857 
- 
- 
- 
- 
- 
- 
-Hà Nội, 05-2026 
-1. GIỚI THIỆU ĐỀ TÀI 
- 
-Trong kỷ nguyên số, dữ liệu về các giải đấu bóng đá hàng đầu châu Âu 
-(Premier League, La Liga, Serie A, Bundesliga, Ligue 1) được sinh ra với 
-khối lượng khổng lồ sau mỗi vòng đấu. Tuy nhiên, việc tra cứu thủ công các 
-thông số như kết quả trận đấu, tỷ số, hay đội chiến thắng trên các trang web 
-thống kê truyền thống thường mất thời gian và thiếu tính tương tác. 
-Để giải quyết vấn đề này, bài toán xây dựng trợ lý ảo (Chatbot) có khả 
-năng hiểu ngôn ngữ tự nhiên và trả lời các câu hỏi về bóng đá trở thành một 
-hướng đi mang tính ứng dụng cao. Trong đồ án này, em tiến hành xây dựng 
-một hệ thống Information Retrieval (IR) Chatbot. Hệ thống sử dụng các 
-thuật toán Học máy (Machine Learning) truyền thống và Xử lý ngôn ngữ tự 
-nhiên (NLP) để chuyển đổi kho dữ liệu thống kê thô thành các câu trả lời 
-chính xác, phục vụ nhu cầu tra cứu nhanh chóng của người hâm mộ. 
- 
-2. MỤC TIÊU NGHIÊN CỨU 
-Đề tài hướng đến các mục tiêu chính trong giai đoạn giữa kỳ như sau: 
-• Xây dựng pipeline dữ liệu: Tự động hóa quá trình chuyển đổi dữ liệu 
-dạng bảng (CSV) của các trận đấu thành tập dữ liệu huấn luyện dạng Hỏi 
-- Đáp (Q&A). 
-• Áp dụng Xử lý ngôn ngữ tự nhiên: Tích hợp các kỹ thuật tiền xử lý văn 
-bản tiếng Việt và biểu diễn ngôn ngữ dưới dạng vector (TF-IDF). 
-• Huấn luyện mô hình: Triển khai kết hợp thuật toán Naive Bayes (phân 
-loại chủ đề) và K-Nearest Neighbors - KNN (tìm kiếm câu hỏi tương 
-đồng). 
-• Xây dựng giao diện người dùng (UI): Thiết kế giao diện web trực quan, 
-mang phong cách thể thao (Football Premium UI) để người dùng dễ dàng 
-tương tác. 
-  
-3. TỔNG QUAN BÀI TOÁN 
-3.1 Khái niệm 
-Trong hệ thống này, bài toán được định nghĩa là tìm kiếm câu trả 
-lời phù hợp nhất từ một cơ sở dữ liệu tri thức có sẵn dựa trên truy vấn 
-của người dùng. Khác với các mô hình tạo văn bản (Generative AI), hệ 
-thống IR đảm bảo tính chính xác tuyệt đối về mặt số liệu (tỷ số, kết quả) 
-do không bị hiện tượng "ảo giác" (hallucination). 
-3.2 Vai trò của NLP 
-NLP giúp máy tính hiểu được ý định truy vấn của người dùng dù họ sử dụng các 
-cách diễn đạt khác nhau. Các kỹ thuật được sử dụng bao gồm: Tokenization (tách từ), 
-Stopword Removal (loại bỏ từ nhiễu), và TF-IDF Vectorization. 
- 
-3.3 Những khó khăn 
-   Sự đa dạng trong truy vấn: Người dùng có thể hỏi "Kết quả trận MU vs Arsenal" 
-hoặc "Ai thắng trận MU gặp Arsenal". 
-   Dữ liệu thô phức tạp: Dữ liệu ban đầu chỉ là các con số thống kê (HomeTeam, 
-AwayTeam, FTHG, FTAG), cần phải có thuật toán để chuyển hóa thành ngôn ngữ tự 
-nhiên. 
- 
- 
-4. DỮ LIỆU VÀ TIỀN XỬ LÝ 
-4.1 Tập dữ liệu sử dụng 
-Nguồn dữ liệu được thu thập từ chuyên trang thống kê football-
-data.co.uk, bao gồm thông số các trận đấu của 5 giải VĐQG hàng đầu 
-châu Âu mùa giải mới nhất. 
-4.2 Sinh dữ liệu tự động 
-Do mô hình cần học từ văn bản, em đã xây dựng script tự động quét 
-qua các dòng dữ liệu thô và sinh ra tập qa_train.csv với cấu trúc: 
-Question (Câu hỏi) Answer (Câu trả lời) Topic (Chủ 
-đề) 
-Kết quả trận Chelsea vs Man City 
-ngày... 
-Trận đấu kết thúc với tỷ số 
-1-1. Kết quả 
-Đội nào giành chiến thắng trong 
-trận... 
-Man City đã xuất sắc đánh 
-bại... Thắng thua 
-Có tổng cộng bao nhiêu bàn 
-thắng... 
-Trận đấu có tổng cộng 2 bàn 
-thắng. Bàn thắng 
- 
-4.3 Tiền xử lý dữ liệu 
-Sử dụng thư viện NLTK và biểu thức chính quy (Regex) để làm 
-sạch văn bản (loại bỏ dấu câu, ký tự đặc biệt). 
-Đưa toàn bộ chữ về in thường (Lowercase). 
-Sử dụng TF-IDF Vectorizer để tính toán mức độ quan trọng của các từ 
-khóa (như tên đội bóng), biến các câu văn thành vector toán học. 
- 
-5. CÁC PHƯƠNG PHÁP THỰC NGHIỆM 
-Hệ thống sử dụng luồng xử lý kép (Dual-model pipeline) để đưa ra câu 
-trả lời: 
-5.1 Multinomial Naive Bayes 
-Mục đích: Khi người dùng nhập câu hỏi, mô hình Naive Bayes sẽ dự 
-đoán xem người dùng đang muốn hỏi về chủ đề gì (Topic: Kết quả, Bàn 
-thắng, hay Thẻ phạt). 
-Ưu điểm: Tốc độ huấn luyện cực nhanh, hoạt động hiệu quả với dữ liệu 
-văn bản dạng TF-IDF. 
- 
-5.2 K-Nearest Neighbors – KNN 
-Mục đích: Sau khi xác định được chủ đề, thuật toán KNN (K=5) sẽ tính 
-toán khoảng cách cosine giữa vector câu hỏi của người dùng và các 
-vector câu hỏi trong cơ sở dữ liệu. 
-Hoạt động: Hệ thống sẽ trích xuất câu trả lời của câu hỏi có khoảng cách 
-gần nhất (độ tương đồng cao nhất) để phản hồi lại cho người dùng. 
- 
-6. TIẾN ĐỘ VÀ KẾT QUẢ ĐẠT ĐƯỢC 
-Tính đến thời điểm báo cáo giữa kỳ, dự án đã hoàn thiện các hạng mục sau: 
-1. Backend & AI: Hoàn thiện script generate_data.py gộp dữ 
-liệu 5 giải đấu. Chạy thành công create_pkl.py để trích xuất 
-các mô hình vectorizer.pkl, nb_model.pkl, và 
-knn_model.pkl vào hệ thống. 
-2. Frontend: Tích hợp thành công giao diện "Modern Premium UI" 
-mang phong cách Bóng đá (Tone màu xanh mặt cỏ, đen và vàng 
-kim), tạo trải nghiệm mượt mà với Glassmorphism và hiệu ứng 
-animations. 
-3. Tích hợp Server: Ứng dụng đã chạy ổn định trên môi trường local 
-thông qua file chatbot_app.py. 
-7. HƯỚNG PHÁT TRIỂN TRONG GIAI ĐOẠN 
-TIẾP THEO 
-Để hoàn thiện đồ án vào cuối kỳ, hệ thống sẽ được nâng cấp các tính 
-năng: 
-• Đánh giá mô hình: Xây dựng script để đo lường độ chính xác (Accuracy, 
-F1-Score) của mô hình Naive Bayes và mức độ tin cậy (Confidence 
-score) của KNN. 
-• Mở rộng kho dữ liệu: Cập nhật thêm thông tin về cầu thủ (Vua phá lưới, 
-Thẻ phạt cá nhân) và bảng xếp hạng. 
-• Tối ưu hóa Tiếng Việt: Tích hợp các bộ tách từ chuyên dụng cho tiếng 
-Việt (như pyvi hoặc VnCoreNLP) để mô hình bắt chính xác các cụm từ 
-ghép như "Ngoại_hạng_Anh", "Việt_vị". 
- 
+1. Tiền xử lý (Preprocessing)
+  Khi người dùng nhập câu hỏi (ví dụ: "MU vô địch C1 mấy lần?"):
+   * Chuẩn hóa: Hệ thống chuyển đổi các từ viết tắt/từ lóng (MU → Manchester United, C1 → Champions League) để đảm bảo đồng nhất với dữ liệu trong database.
+   * Tách từ (Word Segmentation): Sử dụng pyvi để tách từ tiếng Việt. Đây là bước sống còn vì tiếng Việt có các cụm từ đa âm tiết (ví dụ: "Ngoại_hạng_Anh"
+     phải được coi là 1 đơn vị, không phải 3 từ riêng biệt).
+
+  2. Biểu diễn toán học (Vectorization)
+   * TF-IDF Vectorizer: Chuyển đổi câu hỏi đã được tiền xử lý thành một vector số trong không gian đa chiều. Vector này đại diện cho "trọng số" của các từ
+     khóa quan trọng trong câu hỏi so với toàn bộ dữ liệu.
+
+  3. Phân loại ý định (Intent Classification)
+   * Naive Bayes: Đây là mô hình "phân loại" (Classifier). Nó nhận vector câu hỏi và dự đoán xem người dùng thuộc nhóm nào (Ví dụ: Standings, Result,
+     Transfers, Manager).
+   * Mục đích: Để biết được cần tìm dữ liệu ở đâu: Database tĩnh (CSV) hay API thời gian thực.
+
+  4. Xử lý lai (Hybrid RAG Handling)
+   * Luồng A (Dữ liệu tĩnh - KNN Retrieval): Nếu ý định là thông tin lịch sử/tĩnh, mô hình KNN (K-Nearest Neighbors) sẽ tính khoảng cách Cosine Similarity
+     giữa vector câu hỏi và tất cả các vector câu hỏi có sẵn trong qa_base_massive.csv. Nó sẽ chọn ra K câu hỏi tương đồng nhất (đã thiết lập K=3).
+   * Luồng B (Dữ liệu thời gian thực - Real-time API): Nếu ý định là hỏi về lịch thi đấu hôm nay hoặc kết quả đang diễn ra, hệ thống bỏ qua database, tự
+     động gọi Football API để lấy dữ liệu mới nhất.
+
+  5. Phản hồi (Response & Scoring)
+   * Tổng hợp: Trả về câu trả lời đã tìm được (hoặc lấy từ API).
+   * Độ tin cậy (Confidence Score): Tính toán bằng công thức: Accuracy = (1 - Distance_{Cosine}) × 100. Nếu khoảng cách càng gần 0, điểm tin cậy càng cao,
+     cho thấy câu trả lời rất sát với ý định người dùng.
+
+  Tóm lại, hệ thống của bạn hiểu người dùng muốn gì (Bayes), tìm thông tin đúng nơi (KNN cho dữ liệu cũ, API cho dữ liệu mới) và trả lời kèm theo thước đo
+  độ chính xác.

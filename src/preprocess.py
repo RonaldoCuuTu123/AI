@@ -15,6 +15,7 @@ SLANG_DICT = {
     r'\bhlv\b': 'huấn luyện viên',
     r'\bm10\b': 'Lionel Messi',
     r'\bwc\b': 'World Cup',
+    r'\bpele\b': 'Pelé',
 }
 
 def normalize_text(text):
